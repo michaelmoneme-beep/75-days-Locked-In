@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>75 Days to Job-Ready</title>
+<style>
+:root{--bg:#0b0f17;--card:#141a26;--line:#222b3d;--text:#e8edf6;--mute:#8a96ad;--acc:#4f8cff;--ok:#2fd18b;--warn:#ffb547;color-scheme:dark}
+@media (prefers-color-scheme: light){:root{--bg:#f4f6fb;--card:#fff;--line:#dde3ef;--text:#111827;--mute:#5b6577;--acc:#2563eb;--ok:#0f9d63;--warn:#c77d0a;color-scheme:light}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;padding:20px;max-width:960px;margin-inline:auto}
+h1{font-size:clamp(1.5rem,4vw,2.2rem);margin:0 0 4px}
+.sub{color:var(--mute);margin:0 0 20px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:16px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px}
+.stat b{display:block;font-size:1.8rem}
+.stat span{color:var(--mute);font-size:.85rem}
+.bar{height:10px;background:var(--line);border-radius:99px;overflow:hidden;margin-bottom:20px}
+.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--acc),var(--ok));transition:width .4s}
+.today{background:var(--card);border:1px solid var(--acc);border-radius:14px;padding:16px;margin-bottom:20px}
+.today h2{margin:0 0 6px;font-size:1.1rem}
+.today p{margin:4px 0;color:var(--mute)}
+.today button{margin-top:10px;background:var(--acc);color:#fff;border:0;border-radius:10px;padding:10px 16px;font-weight:600;cursor:pointer}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(54px,1fr));gap:8px}
+.cell{aspect-ratio:1;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--text);cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:.95rem;font-weight:600;padding:0}
+.cell small{font-size:.62rem;color:var(--mute);font-weight:400}
+.cell.assess{border-color:var(--warn)}
+.cell.done{background:var(--ok);border-color:var(--ok);color:#04130c}
+.cell.done small{color:#04130c}
+.cell.now{outline:2px solid var(--acc);outline-offset:2px}
+.legend{display:flex;gap:14px;flex-wrap:wrap;color:var(--mute);font-size:.8rem;margin:14px 0}
+.phases{display:grid;gap:8px;margin-top:20px}
+.ph{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 14px;display:flex;justify-content:space-between;gap:10px;font-size:.9rem}
+.ph span{color:var(--mute)}
+footer{color:var(--mute);font-size:.8rem;margin:24px 0 8px}
+</style>
+</head>
+<body>
+<h1>75 Days to Job-Ready</h1>
+<p class="sub">TypeScript + React + Node + PostgreSQL &middot; Oct 31, 2026 &rarr; Jan 13, 2027</p>
+
+<div class="stats">
+  <div class="stat"><b id="sDone">0</b><span>days completed</span></div>
+  <div class="stat"><b id="sStreak">0</b><span>day streak</span></div>
+  <div class="stat"><b id="sLeft">75</b><span>days left</span></div>
+  <div class="stat"><b id="sPct">0%</b><span>progress</span></div>
+</div>
+<div class="bar"><i id="bar"></i></div>
+
+<div class="today" id="panel"></div>
+
+<div class="legend"><span>&#9632; green = done</span><span>&#9632; amber border = assessment</span><span>&#9632; blue ring = today</span></div>
+<div class="grid" id="grid"></div>
+
+<div class="phases">
+  <div class="ph"><b>Phase 1 &middot; Foundations</b><span>Days 1-15</span></div>
+  <div class="ph"><b>Phase 2 &middot; Web, SQL, APIs</b><span>Days 16-35</span></div>
+  <div class="ph"><b>Phase 3 &middot; Flagship project</b><span>Days 36-58</span></div>
+  <div class="ph"><b>Phase 4 &middot; Project 2, Docker, CI/CD, AI</b><span>Days 59-68</span></div>
+  <div class="ph"><b>Phase 5 &middot; Portfolio, interviews, applications</b><span>Days 69-75</span></div>
+</div>
+<footer>A day only counts when the deliverable and the checkpoint are both done. Never miss twice.</footer>
+
+<script>
+var START = new Date(2026, 9, 31);
+var DELIV = {
+1:"Diagnostic (FizzBuzz, reverse string, word count) + GitHub repo",
+2:"Tip-and-tax calculator (Node)",
+3:"Number-guessing game (terminal)",
+4:"Utility library, 8 functions + test script",
+5:"Student-grades analyzer",
+6:"Shopping cart module",
+7:"WEEK 1 ASSESSMENT: 4 problems, 90 min, no AI",
+8:"CSV-to-JSON converter",
+9:"Sequential task runner (promises)",
+10:"CLI API fetcher with error handling",
+11:"Browser to-do app (no frameworks)",
+12:"Bug log with root causes",
+13:"Utility library in strict TypeScript",
+14:"WEEK 2 ASSESSMENT: weather/quote fetcher, 90 min",
+15:"Phase 1 capstone deployed on GitHub Pages",
+75:"Final review, applications submitted, networking outreach"
+};
+var KEY = "tracker75-done";
+var done = {};
+try { var raw = localStorage.getItem(KEY); if (raw) done = JSON.parse(raw) || {}; } catch (e) { done = {}; }
+function save(){ try { localStorage.setItem(KEY, JSON.stringify(done)); } catch (e) {} }
+
+function dayDate(n){ var d = new Date(START); d.setDate(d.getDate() + n - 1); return d; }
+function fmt(d){ return d.toLocaleDateString("en-GB", {weekday:"short", day:"numeric", month:"short"}); }
+function todayNum(){
+  var t = new Date(); t.setHours(0,0,0,0);
+  return Math.floor((t - START) / 86400000) + 1;
+}
+function isAssess(n){ return n % 7 === 0 && n !== 75; }
+function deliv(n){
+  if (DELIV[n]) return DELIV[n];
+  if (isAssess(n)) return "WEEK " + (n/7) + " ASSESSMENT (details when delivered)";
+  return "Unlocked when this phase is delivered in chat";
+}
+var selected = null;
+
+function streak(){
+  var t = todayNum(), n = Math.min(Math.max(t, 0), 75);
+  if (!done[n]) n--;
+  var s = 0;
+  while (n >= 1 && done[n]) { s++; n--; }
+  return s;
+}
+
+function render(){
+  var count = 0;
+  for (var k in done) if (done[k]) count++;
+  var t = todayNum();
+  document.getElementById("sDone").textContent = count;
+  document.getElementById("sStreak").textContent = streak();
+  document.getElementById("sLeft").textContent = Math.max(0, Math.min(75, 75 - Math.max(t, 0)));
+  var pct = Math.round(count / 75 * 100);
+  document.getElementById("sPct").textContent = pct + "%";
+  document.getElementById("bar").style.width = pct + "%";
+
+  var grid = document.getElementById("grid");
+  grid.innerHTML = "";
+  for (var n = 1; n <= 75; n++) {
+    (function(n){
+      var b = document.createElement("button");
+      b.className = "cell" + (done[n] ? " done" : "") + (isAssess(n) ? " assess" : "") + (n === t ? " now" : "");
+      b.innerHTML = n + "<small>" + dayDate(n).toLocaleDateString("en-GB", {day:"numeric", month:"short"}) + "</small>";
+      b.setAttribute("aria-label", "Day " + n);
+      b.onclick = function(){ selected = n; render(); };
+      grid.appendChild(b);
+    })(n);
+  }
+
+  var show = selected || (t >= 1 && t <= 75 ? t : 1);
+  var p = document.getElementById("panel");
+  var head = (t < 1 && !selected) ? "Starts Sat 31 Oct. Day 1 preview" : "Day " + show + " &middot; " + fmt(dayDate(show));
+  p.innerHTML = "<h2>" + head + "</h2><p>" + deliv(show) + "</p><p>Budget: 2 hrs</p>";
+  var btn = document.createElement("button");
+  btn.textContent = done[show] ? "Mark as not done" : "Mark day complete";
+  btn.onclick = function(){ if (done[show]) delete done[show]; else done[show] = true; save(); render(); };
+  p.appendChild(btn);
+}
+render();
+</script>
+</body>
+</html>
